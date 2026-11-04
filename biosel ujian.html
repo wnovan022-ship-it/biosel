@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ujian Online: Biologi Sel & Genetika</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col">
+
+  <!-- HEADER -->
+  <header class="bg-indigo-700 text-white shadow-md p-4 sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto flex justify-between items-center">
+      <h1 class="text-xl font-bold tracking-wide">Ujian Biologi Sel & Genetika</h1>
+      <div id="timer-box" class="hidden text-right">
+        <span class="text-xs block text-indigo-200">Sisa Waktu:</span>
+        <span id="timer" class="text-lg font-mono font-bold text-yellow-300">40:00</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-6xl mx-auto w-full flex-grow p-4 md:p-6">
+
+    <!-- 1. HALAMAN START / IDENTITAS -->
+    <section id="start-screen" class="max-w-md mx-auto bg-white rounded-xl shadow-md p-6 mt-10">
+      <h2 class="text-2xl font-bold text-slate-800 mb-2">Selamat Datang</h2>
+      <p class="text-slate-600 text-sm mb-6">Silakan isi data diri Anda sebelum memulai ujian (40 Soal Pilihan Ganda).</p>
+      
+      <form id="start-form" onsubmit="startQuiz(event)">
+        <div class="mb-4">
+          <label class="block text-sm font-medium mb-1">Nama Lengkap</label>
+          <input type="text" id="user-name" required placeholder="Contoh: Budi Santoso" class="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none">
+        </div>
+        <div class="mb-6">
+          <label class="block text-sm font-medium mb-1">NIM / Nomor Absen</label>
+          <input type="text" id="user-id" required placeholder="Contoh: 2403017001" class="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none">
+        </div>
+        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg transition duration-200">
+          Mulai Ujian Sekarang
+        </button>
+      </form>
+    </section>
+
+    <!-- 2. HALAMAN UJIAN (QUIZ SCREEN) -->
+    <section id="quiz-screen" class="hidden grid grid-cols-1 lg:grid-cols-4 gap-6">
+      
+      <!-- Navigasi Soal (Sidebar) -->
+      <div class="lg:col-span-1 bg-white rounded-xl shadow-md p-4 order-2 lg:order-1 h-fit">
+        <h3 class="font-bold mb-3 text-slate-700 border-b pb-2">Navigasi Soal</h3>
+        <div id="nav-grid" class="grid grid-cols-5 gap-2 max-h-60 lg:max-h-none overflow-y-auto">
+          <!-- Nomor soal di-generate via JS -->
+        </div>
+        <div class="mt-4 pt-4 border-t text-xs space-y-1">
+          <div class="flex items-center gap-2"><span class="w-3 h-3 bg-indigo-600 rounded"></span> Aktif</div>
+          <div class="flex items-center gap-2"><span class="w-3 h-3 bg-emerald-500 rounded"></span> Terjawab</div>
+          <div class="flex items-center gap-2"><span class="w-3 h-3 bg-amber-400 rounded"></span> Ragu-ragu</div>
+          <div class="flex items-center gap-2"><span class="w-3 h-3 bg-slate-200 rounded"></span> Belum Diisi</div>
+        </div>
+      </div>
+
+      <!-- Tampilan Soal (Main Content) -->
+      <div class="lg:col-span-3 bg-white rounded-xl shadow-md p-6 order-1 lg:order-2 flex flex-col justify-between min-h-[400px]">
+        <div>
+          <div class="flex justify-between items-center mb-4">
+            <span id="question-number" class="text-xs font-semibold uppercase bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full">Soal 1 dari 40</span>
+            <span id="question-category" class="text-xs text-slate-500 font-medium">Kloroplas</span>
+          </div>
+          <h2 id="question-text" class="text-lg font-semibold text-slate-800 mb-6 leading-relaxed">
+            <!-- Teks Soal -->
+          </h2>
+
+          <div id="options-container" class="space-y-3">
+            <!-- Pilihan jawaban di-generate via JS -->
+          </div>
+        </div>
+
+        <!-- Tombol Bawah -->
+        <div class="flex justify-between items-center mt-8 pt-4 border-t gap-2">
+          <button id="btn-prev" onclick="prevQuestion()" class="px-4 py-2 border border-slate-300 rounded-lg text-sm hover:bg-slate-50 disabled:opacity-50">
+            Sebelumnya
+          </button>
+          
+          <button id="btn-doubt" onclick="toggleDoubt()" class="px-4 py-2 bg-amber-400 hover:bg-amber-500 text-slate-900 font-medium rounded-lg text-sm">
+            Ragu-ragu
+          </button>
+
+          <button id="btn-next" onclick="nextQuestion()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium">
+            Selanjutnya
+          </button>
+          
+          <button id="btn-finish" onclick="confirmFinish()" class="hidden px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium">
+            Selesai Ujian
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. HALAMAN HASIL & PEMBAHASAN -->
+    <section id="result-screen" class="hidden max-w-4xl mx-auto space-y-6">
+      <div class="bg-white rounded-xl shadow-md p-6 text-center">
+        <h2 class="text-2xl font-bold mb-1">Hasil Ujian Anda</h2>
+        <p id="result-user" class="text-slate-500 text-sm mb-4"></p>
+
+        <div class="inline-flex flex-col justify-center items-center bg-indigo-50 border-2 border-indigo-200 rounded-full w-32 h-32 my-2">
+          <span id="final-score" class="text-4xl font-extrabold text-indigo-700">0</span>
+          <span class="text-xs text-slate-500 font-medium">SKOR TOTAL</span>
+        </div>
+
+        <div class="grid grid-cols-3 gap-4 max-w-md mx-auto mt-6 text-center">
+          <div class="bg-emerald-50 p-3 rounded-lg border border-emerald-200">
+            <span class="block text-xs text-emerald-600 font-medium">Benar</span>
+            <span id="count-correct" class="text-xl font-bold text-emerald-700">0</span>
+          </div>
+          <div class="bg-rose-50 p-3 rounded-lg border border-rose-200">
+            <span class="block text-xs text-rose-600 font-medium">Salah</span>
+            <span id="count-wrong" class="text-xl font-bold text-rose-700">0</span>
+          </div>
+          <div class="bg-amber-50 p-3 rounded-lg border border-amber-200">
+            <span class="block text-xs text-amber-600 font-medium">Ragu-ragu</span>
+            <span id="count-doubt" class="text-xl font-bold text-amber-700">0</span>
+          </div>
+        </div>
+
+        <button onclick="location.reload()" class="mt-6 px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+          Ulangi Ujian
+        </button>
+      </div>
+
+      <!-- Detail Pembahasan -->
+      <div class="bg-white rounded-xl shadow-md p-6">
+        <h3 class="text-xl font-bold mb-4 text-slate-800 border-b pb-2">Kunci Jawaban & Evaluasi</h3>
+        <div id="review-container" class="space-y-6">
+          <!-- Daftar Review Soal -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // DATA SOAL (40 SOAL DARI BANK SOAL)
+    const quizData = [
+      // Kloroplas (1-10)
+      { id: 1, category: "Kloroplas", text: "Di dalam struktur kloroplas, tempat terjadinya reaksi terang (photosynthetic electron-transfer reactions) adalah pada bagian...", options: ["Stroma", "Membran tilakoid", "Intermembrane space", "Membran luar", "Matriks"], answer: 1 },
+      { id: 2, category: "Kloroplas", text: "Reaksi fiksasi karbon (reaksi gelap) pada kloroplas berlangsung di bagian...", options: ["Tilakoid", "Stroma", "Ruang antarmembran", "Kristae", "Envelope luar"], answer: 1 },
+      { id: 3, category: "Kloroplas", text: "Pigmen fotosintesis berupa fikoeritrin dan fikosianin hanya dapat ditemukan pada...", options: ["Tumbuhan tingkat tinggi", "Ganggang hijau", "Ganggang merah dan cyanobacteria", "Lumut kerak", "Semua jenis tumbuhan paku"], answer: 2 },
+      { id: 4, category: "Kloroplas", text: "Bagian membran dalam kloroplas bersifat permeabel terhadap zat-zat berikut, KECUALI...", options: ["Sukrosa", "CO2", "Asam asetat", "Asam amino", "Glyceric acid"], answer: 0 },
+      { id: 5, category: "Kloroplas", text: "Faktor lingkungan berupa temperatur yang sangat sensitif bagi perkembangan kloroplas umumnya berada di bawah suhu...", options: ["12°C", "20°C", "25°C", "30°C", "37°C"], answer: 0 },
+      { id: 6, category: "Kloroplas", text: "Hasil akhir utama dari proses siklus fiksasi karbon (Siklus Calvin) di dalam stroma kloroplas adalah...", options: ["Glukosa murni langsung", "Gliseraldehid 3-fosfat (G3P)", "Asam piruvat", "Asetil KoA", "Oksigen bebas"], answer: 1 },
+      { id: 7, category: "Kloroplas", text: "Pada tanaman tinggi, kondisi pertumbuhan dalam gelap akan menyebabkan kloroplas berkembang menjadi...", options: ["Leukoplas", "Kromoplas", "Etioplas", "Amiloplas", "Proplastida aktif"], answer: 2 },
+      { id: 8, category: "Kloroplas", text: "Unsur mineral mikro yang berperan penting dalam diferensiasi kloroplas meliputi...", options: ["Nitrogen, Fosfor, Kalium", "Kalsium, Magnesium, Sulfur", "Besi, Mangan, Tembaga, Boron, Molybdenum, Seng", "Karbon, Hidrogen, Oksigen", "Natrium dan Klorin"], answer: 2 },
+      { id: 9, category: "Kloroplas", text: "Perbedaan orientasi ATP synthase pada kloroplas dibandingkan mitokondria adalah ATP synthase kloroplas berorientasi ke arah...", options: ["Matriks", "Ruang tilakoid", "Stroma", "Sitosol", "Ruang antarmembran"], answer: 2 },
+      { id: 10, category: "Kloroplas", text: "Jumlah kloroplas per sel pada alga hijau uniseluler Spirogyra adalah...", options: ["1 kloroplas", "5 kloroplas", "10 kloroplas", "20 kloroplas", "Berbentuk pita tanpa jumlah pasti"], answer: 0 },
+
+      // Mitokondria (11-20)
+      { id: 11, category: "Mitokondria", text: "Fungsi utama dari mitokondria di dalam sel eukariotik adalah...", options: ["Sintesis protein ribosom", "Respirasi seluler dan menghasilkan ATP", "Fotosintesis pembentukan karbohidrat", "Pengemasan materi genetik inti", "Degradasi limbah sel oleh enzim pencernaan"], answer: 1 },
+      { id: 12, category: "Mitokondria", text: "Lipida khas penyusun membran dalam mitokondria yang mencapai 10% dari total lipid membran dan membuatnya impermeabel terhadap ion adalah...", options: ["Kolesterol", "Fosfatidilkolin", "Kardiolipin", "Sfingomielin", "Gliserol"], answer: 2 },
+      { id: 13, category: "Mitokondria", text: "Protein channel-forming yang terdapat secara melimpah pada membran luar mitokondria dinamakan...", options: ["Porin", "Tubulin", "Histon", "Integrin", "Aktin"], answer: 0 },
+      { id: 14, category: "Mitokondria", text: "Berdasarkan distribusi proteinnya dalam sel hati, persentase protein mitokondria terbesar ditemukan di bagian...", options: ["Membran luar (6%)", "Intermembrane space (6%)", "Membran dalam (21%)", "Matriks (67%)", "Krista (50%)"], answer: 3 },
+      { id: 15, category: "Mitokondria", text: "Sebelum memasuki siklus asam sitrat (Siklus Krebs) di dalam matriks mitokondria, asam piruvat hasil glikolisis diubah terlebih dahulu menjadi...", options: ["Asam laktat", "Asetil KoA", "Gliseraldehid 3-fosfat", "Oksaloasetat", "Sitrat"], answer: 1 },
+      { id: 16, category: "Mitokondria", text: "Siklus asam sitrat (TCA cycle) atau Siklus Krebs menghasilkan molekul pembawa elektron utama berupa...", options: ["ATP dan GTP saja", "NADH dan FADH2", "CO2 dan H2O", "NADP dan NADPH", "Asam piruvat dan koenzim A"], answer: 1 },
+      { id: 17, category: "Mitokondria", text: "Enzim yang mengkatalisis konversi piruvat menjadi asetil KoA di dalam matriks mitokondrial adalah...", options: ["ATP synthase", "Pyruvate dehydrogenase complex", "Citrate synthase", "Aconitase", "Succinyl-CoA synthetase"], answer: 1 },
+      { id: 18, category: "Mitokondria", text: "Total hasil bersih molekul ATP maksimal yang dihasilkan dari respirasi aerobik 1 molekul glukosa pada sel eukariot adalah...", options: ["2 ATP", "4 ATP", "12-18 ATP", "36 atau 38 ATP", "Lebih dari 50 ATP"], answer: 3 },
+      { id: 19, category: "Mitokondria", text: "Bentuk DNA mitokondria yang terletak di dalam matriks mitokondria adalah...", options: ["Linier ganda terikat protein histon", "Sirkular (melingkar)", "Untai tunggal linier", "Berbentuk rantai bercabang", "Menempel pada membran luar"], answer: 1 },
+      { id: 20, category: "Mitokondria", text: "Organel sel yang memiliki kemampuan memproduksi sebagian proteinnya sendiri karena memiliki DNA dan ribosom mandiri selain inti sel adalah...", options: ["Badan Golgi", "Retikulum Endoplasma", "Lisosom", "Mitokondria", "Peroksisom"], answer: 3 },
+
+      // Inti Sel / Nukleus (21-30)
+      { id: 21, category: "Inti Sel (Nukleus)", text: "Membran luar pada salut inti (nuclear envelope) secara langsung bersinambungan dengan membran...", options: ["Badan Golgi", "Retikulum Endoplasma (RE)", "Membran plasma", "Membran mitokondria", "Membran vakuola"], answer: 1 },
+      { id: 22, category: "Inti Sel (Nukleus)", text: "Lapisan matriks serabut protein tebal sekitar 300 nm yang melapisi permukaan bagian dalam membran inti sel disebut...", options: ["Nukleolus", "Kinetokor", "Korteks inti (Lamina serabut / nuclear lamina)", "Kromosom", "Sentromer"], answer: 2 },
+      { id: 23, category: "Inti Sel (Nukleus)", text: "Komponen senyawa kimia yang paling dominan menyusun salut inti sel (sekitar 65-75%) adalah...", options: ["Lipid", "Karbohidrat", "Protein", "DNA", "RNA"], answer: 2 },
+      { id: 24, category: "Inti Sel (Nukleus)", text: "Struktur di dalam nukleus yang bertanggung jawab penuh terhadap tempat sintesis ribosom dan transkripsi gen rRNA adalah...", options: ["Nukleolus", "Kinetokor", "Telomer", "Centromere", "Sentriol"], answer: 0 },
+      { id: 25, category: "Inti Sel (Nukleus)", text: "Transport molekul berukuran besar (seperti protein dan partikel ribonukleoprotein) keluar masuk melalui kompleks pori inti merupakan mekanisme transpor yang bersifat...", options: ["Difusi pasif sederhana", "Osmosis murni", "Energi-dependent mediated transport (transpor aktif)", "Pinositosis pasif", "Aliran massa tanpa seleksi"], answer: 2 },
+      { id: 26, category: "Inti Sel (Nukleus)", text: "Selama daur sel, salut inti akan mengalami disintegrasi atau menghilang pada fase...", options: ["Interfase", "Profase", "Metafase", "Anafase", "Telofase awal"], answer: 1 },
+      { id: 27, category: "Inti Sel (Nukleus)", text: "Ikatan antara kromosom dan membran inti saat siklus sel berlangsung umumnya terjadi di daerah khusus yaitu...", options: ["Daerah telomer atau sentromer", "Sepanjang lengan kromatid", "Daerah nukleolus", "Bagian kinetokor luar", "Zona interkromatin"], answer: 0 },
+      { id: 28, category: "Inti Sel (Nukleus)", text: "Bentuk konfigurasi nukleolus berdasarkan penyebaran komponennya dapat dibedakan menjadi...", options: ["Homogen, heterogen (muttled/nukleolonema), dan bentuk cincin", "Bulat, oval, dan pita pipih", "Granuler, fibriler, dan amorf", "Terbuka, tertutup, dan terfragmentasi", "Sentris, asentris, dan polisentris"], answer: 0 },
+      { id: 29, category: "Inti Sel (Nukleus)", text: "Peristiwa pengolahan atau pemotongan molekul RNA awal sebelum dikirim ke sitoplasma melalui pori inti dikenal dengan istilah...", options: ["Replikasi DNA", "RNA Splicing", "Translasi protein", "Transkripsi balik", "Duplikasi kromosom"], answer: 1 },
+      { id: 30, category: "Inti Sel (Nukleus)", text: "Protein spesifik pengangkut yang berperan dalam membawa protein bermuatan NLS (Nuclear Localization Signal) untuk masuk ke dalam nukleus dinamakan...", options: ["Tubulin dan Aktin", "Histon H1 dan H2A", "Importin (alpha dan beta)", "RNA Polimerase", "Knesin dan Dinein"], answer: 2 },
+
+      // Genom (31-40)
+      { id: 31, category: "Genom", text: "Keseluruhan bahan genetik yang membawa semua informasi pendukung kehidupan pada suatu makhluk hidup disebut...", options: ["Kromatin", "Genom", "Nukleosom", "Plasmida", "Kodon"], answer: 1 },
+      { id: 32, category: "Genom", text: "Protein sangat basa yang kaya akan asam amino arginin dan lisin pada eukariot yang membungkus DNA membentuk nukleosom dinamakan...", options: ["Protein non-histon", "Protein histon", "Enzim RNA polimerase", "Protein struktural aktin", "Enzim ligase"], answer: 1 },
+      { id: 33, category: "Genom", text: "Lima kelas utama protein histon penyusun inti nukleosom dan penghubung meliputi...", options: ["alpha, beta, gamma, delta, epsilon", "H1, H2A, H2B, H3, H4", "Aktin, Miosin, Tubulin, Lamin, Porin", "Topoisomerase, Helikase, Primase, Ligase, Polimerase", "Albumin, Globulin, Histon, Keratin, Kolagen"], answer: 1 },
+      { id: 34, category: "Genom", text: "Unit berulang dasar struktur kromatin (nukleosom) terdiri atas DNA core sepanjang 146 pasang basa yang melingkari oktamer histon sebanyak...", options: ["1 kali", "1,5 kali", "2 kali", "3 kali", "4,5 kali"], answer: 1 },
+      { id: 35, category: "Genom", text: "Serabut kromatin berukuran 30 nm dibentuk dari pelintiran serabut 10 nm secara heliks, di mana setiap satu putaran heliks sempurna (solenoid) terdiri dari...", options: ["2 nukleosom", "4 nukleosom", "6 nukleosom", "10 nukleosom", "14 nukleosom"], answer: 2 },
+      { id: 36, category: "Genom", text: "Bagian dari kromosom mitosis yang mengandung sekuens DNA sangat berulang (satellite DNA) dan mengikat protein kinetokor untuk perlekatan mikrotubulus spindel adalah...", options: ["Telomer", "Sentromer", "Nukleolus organizer regions (NOR)", "Satelit kromosom", "Konstriksi sekunder"], answer: 1 },
+      { id: 37, category: "Genom", text: "Kromosom raksasa (giant chromosomes) yang sering ditemukan pada kelenjar liur serangga (seperti Drosophila) akibat proses endomitosis disebut...", options: ["Kromosom akrosentrik", "Kromosom politen (Polytene chromosomes)", "Kromosom metasentrik", "Isochromosomes", "Kromosom ring (cincin)"], answer: 1 },
+      { id: 38, category: "Genom", text: "Gen-gen yang bertanggung jawab untuk menjalankan fungsi pemeliharaan sel dasar sehari-hari (house-keeping genes) pada kromosom politen umumnya terletak pada bagian...", options: ["Bands (pita gelap)", "Interbands", "Chromocenter", "Kinetokor", "Telomer"], answer: 1 },
+      { id: 39, category: "Genom", text: "Perubahan ekspresi genetik akibat modifikasi kovalen pada ekor histon (seperti asetilasi, metilasi, atau fosforilasi) tanpa mengubah urutan basa DNA disebut sebagai perubahan...", options: ["Genetik mutasi titik", "Epigenetik", "Deletion translokasi", "Poliploidi", "Crossing over meiosis"], answer: 1 },
+      { id: 40, category: "Genom", text: "Enzim utama yang berperan dalam proses penyambungan fragmen-fragmen Okazaki pada untai tertinggal (lagging strand) saat replikasi DNA adalah...", options: ["DNA polimerase", "DNA helikase", "DNA ligase", "RNA primase", "Topoisomerase"], answer: 2 }
+    ];
+
+    // STATE APLIKASI
+    let currentIndex = 0;
+    let userAnswers = new Array(quizData.length).fill(null);
+    let userDoubts = new Array(quizData.length).fill(false);
+    let timeLeft = 40 * 60; // 40 Menit
+    let timerInterval = null;
+    let userInfo = { name: '', id: '' };
+
+    // FUNGSI MULAI UJIAN
+    function startQuiz(e) {
+      e.preventDefault();
+      userInfo.name = document.getElementById('user-name').value;
+      userInfo.id = document.getElementById('user-id').value;
+
+      document.getElementById('start-screen').classList.add('hidden');
+      document.getElementById('quiz-screen').classList.remove('hidden');
+      document.getElementById('timer-box').classList.remove('hidden');
+
+      renderNavGrid();
+      loadQuestion();
+      startTimer();
+    }
+
+    // TIMER
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        const min = Math.floor(timeLeft / 60);
+        const sec = timeLeft % 60;
+        document.getElementById('timer').innerText = 
+          `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          finishQuiz();
+        }
+      }, 1000);
+    }
+
+    // RENDER SOAL
+    function loadQuestion() {
+      const q = quizData[currentIndex];
+      document.getElementById('question-number').innerText = `Soal ${currentIndex + 1} dari ${quizData.length}`;
+      document.getElementById('question-category').innerText = q.category;
+      document.getElementById('question-text').innerText = `${q.id}. ${q.text}`;
+
+      const optionsDiv = document.getElementById('options-container');
+      optionsDiv.innerHTML = '';
+
+      const labels = ['A', 'B', 'C', 'D', 'E'];
+      q.options.forEach((opt, idx) => {
+        const isChecked = userAnswers[currentIndex] === idx;
+        const optEl = document.createElement('label');
+        optEl.className = `flex items-center p-3 border rounded-lg cursor-pointer transition ${
+          isChecked ? 'bg-indigo-50 border-indigo-500 font-medium' : 'hover:bg-slate-50 border-slate-200'
+        }`;
+        optEl.innerHTML = `
+          <input type="radio" name="option" value="${idx}" ${isChecked ? 'checked' : ''} onchange="selectOption(${idx})" class="w-4 h-4 text-indigo-600 focus:ring-indigo-500">
+          <span class="ml-3 text-slate-700 text-sm"><strong class="mr-1">${labels[idx]}.</strong> ${opt}</span>
+        `;
+        optionsDiv.appendChild(optEl);
+      });
+
+      // Update Navigasi Tombol
+      document.getElementById('btn-prev').disabled = currentIndex === 0;
+      
+      if (currentIndex === quizData.length - 1) {
+        document.getElementById('btn-next').classList.add('hidden');
+        document.getElementById('btn-finish').classList.remove('hidden');
+      } else {
+        document.getElementById('btn-next').classList.remove('hidden');
+        document.getElementById('btn-finish').classList.add('hidden');
+      }
+
+      // Sync state ragu-ragu
+      const btnDoubt = document.getElementById('btn-doubt');
+      if (userDoubts[currentIndex]) {
+        btnDoubt.classList.add('ring-2', 'ring-amber-600');
+      } else {
+        btnDoubt.classList.remove('ring-2', 'ring-amber-600');
+      }
+
+      updateNavGridState();
+    }
+
+    function selectOption(index) {
+      userAnswers[currentIndex] = index;
+      loadQuestion();
+    }
+
+    function toggleDoubt() {
+      userDoubts[currentIndex] = !userDoubts[currentIndex];
+      loadQuestion();
+    }
+
+    function nextQuestion() {
+      if (currentIndex < quizData.length - 1) {
+        currentIndex++;
+        loadQuestion();
+      }
+    }
+
+    function prevQuestion() {
+      if (currentIndex > 0) {
+        currentIndex--;
+        loadQuestion();
+      }
+    }
+
+    function jumpToQuestion(idx) {
+      currentIndex = idx;
+      loadQuestion();
+    }
+
+    // RENDER NAV GRID
+    function renderNavGrid() {
+      const grid = document.getElementById('nav-grid');
+      grid.innerHTML = '';
+      quizData.forEach((_, idx) => {
+        const btn = document.createElement('button');
+        btn.id = `nav-btn-${idx}`;
+        btn.innerText = idx + 1;
+        btn.onclick = () => jumpToQuestion(idx);
+        btn.className = 'w-full py-2 rounded font-medium text-xs border text-center transition';
+        grid.appendChild(btn);
+      });
+    }
+
+    function updateNavGridState() {
+      quizData.forEach((_, idx) => {
+        const btn = document.getElementById(`nav-btn-${idx}`);
+        if (!btn) return;
+        
+        let cls = "bg-slate-100 text-slate-700 border-slate-300";
+        if (userDoubts[idx]) {
+          cls = "bg-amber-400 text-slate-900 border-amber-500 font-bold";
+        } else if (userAnswers[idx] !== null) {
+          cls = "bg-emerald-500 text-white border-emerald-600 font-bold";
+        }
+
+        if (idx === currentIndex) {
+          cls += " ring-2 ring-indigo-600 ring-offset-1";
+        }
+        btn.className = `w-full py-2 rounded text-xs transition ${cls}`;
+      });
+    }
+
+    function confirmFinish() {
+      if (confirm("Apakah Anda yakin ingin menyelesaikan ujian?")) {
+        finishQuiz();
+      }
+    }
+
+    // FINISH QUIZ & CALCULATION
+    function finishQuiz() {
+      clearInterval(timerInterval);
+      
+      document.getElementById('quiz-screen').classList.add('hidden');
+      document.getElementById('timer-box').classList.add('hidden');
+      document.getElementById('result-screen').classList.remove('hidden');
+
+      let correctCount = 0;
+      let doubtCount = 0;
+
+      quizData.forEach((q, i) => {
+        if (userAnswers[i] === q.answer) correctCount++;
+        if (userDoubts[i]) doubtCount++;
+      });
+
+      const wrongCount = quizData.length - correctCount;
+      const finalScore = Math.round((correctCount / quizData.length) * 100);
+
+      document.getElementById('result-user').innerText = `Peserta: ${userInfo.name} (${userInfo.id})`;
+      document.getElementById('final-score').innerText = finalScore;
+      document.getElementById('count-correct').innerText = correctCount;
+      document.getElementById('count-wrong').innerText = wrongCount;
+      document.getElementById('count-doubt').innerText = doubtCount;
+
+      renderReview();
+    }
+
+    // PEMBAHASAN
+    function renderReview() {
+      const container = document.getElementById('review-container');
+      container.innerHTML = '';
+      const labels = ['A', 'B', 'C', 'D', 'E'];
+
+      quizData.forEach((q, i) => {
+        const userAns = userAnswers[i];
+        const isCorrect = userAns === q.answer;
+
+        const card = document.createElement('div');
+        card.className = `p-4 rounded-lg border ${isCorrect ? 'border-emerald-200 bg-emerald-50/30' : 'border-rose-200 bg-rose-50/30'}`;
+        
+        let optionsHtml = '';
+        q.options.forEach((opt, idx) => {
+          let badge = '';
+          let textStyle = 'text-slate-600';
+
+          if (idx === q.answer) {
+            badge = '<span class="ml-2 text-xs bg-emerald-600 text-white px-2 py-0.5 rounded">Kunci Jawaban</span>';
+            textStyle = 'font-bold text-emerald-800';
+          }
+          if (userAns === idx && !isCorrect) {
+            badge += '<span class="ml-2 text-xs bg-rose-600 text-white px-2 py-0.5 rounded">Jawaban Anda</span>';
+            textStyle = 'font-bold text-rose-800';
+          }
+
+          optionsHtml += `<li class="text-sm ${textStyle}">${labels[idx]}. ${opt} ${badge}</li>`;
+        });
+
+        card.innerHTML = `
+          <div class="flex justify-between items-start mb-2">
+            <span class="font-bold text-slate-800 text-sm">Soal ${i + 1} (${q.category})</span>
+            <span class="text-xs px-2 py-1 rounded font-semibold ${isCorrect ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+              ${isCorrect ? 'BENAR' : 'SALAH / KOSONG'}
+            </span>
+          </div>
+          <p class="text-slate-800 text-sm font-medium mb-3">${q.text}</p>
+          <ul class="space-y-1 pl-2 border-l-2 ${isCorrect ? 'border-emerald-400' : 'border-rose-400'}">
+            ${optionsHtml}
+          </ul>
+        `;
+        container.appendChild(card);
+      });
+    }
+  </script>
+</body>
+</html>
